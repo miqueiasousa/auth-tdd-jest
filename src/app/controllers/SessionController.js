@@ -1,19 +1,17 @@
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const { User } = require('../models');
 
 class SessionController {
   static async store(req, res) {
-    const { email, password } = req.body
+    const { name, email, password } = req.body
 
-    const user = await User.findOne({ where: { email } })
+    const userIsRegistered = await User.findOne({ where: { email } })
     
-    if(!user) return res.status(401).json({ message: 'User not found' })
+    if(userIsRegistered) 
+      return res.status(409).json({ message: 'user already has been registered' })
 
-    const compare = await bcrypt.compare(password, user.password_hash)
-
-    if (!compare) return res.status(401).json({ message: 'Incorrect Password' })
+    const user = User.create({ name, email, password })
 
     const token = jwt.sign({ id: user.id }, process.env.APP_SECRET)
 
